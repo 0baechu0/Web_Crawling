@@ -14,14 +14,14 @@ sheet.title = "Blog Data"
 sheet.append(["Title", "Image"])
 
 # 웹드라이버 설정
-keyword = "기후위기"          # 검색어
+keyword = "기후위기"  # 검색어
 opt = webdriver.ChromeOptions()
 opt.add_experimental_option("detach", True)
 browser = webdriver.Chrome(options=opt)
 
-# 검색 결과 1~3페이지 본문 URL 수집
+# 검색 결과 1~5페이지 본문 URL 수집
 blog_url_list = []
-for page_num in range(1, 4):
+for page_num in range(1, 6):
     browser.get(f"https://section.blog.naver.com/Search/Post.naver?pageNo={page_num}&rangeType=ALL&orderBy=sim&keyword={keyword}")
     time.sleep(2)
     items = browser.find_elements(By.CSS_SELECTOR, "a.desc_inner")
@@ -48,19 +48,22 @@ for blog_url in blog_url_list:
     try:
         image_element = browser.find_element(By.CSS_SELECTOR, "div.se-main-container img")
         image_url = image_element.get_attribute("src")
+        
+        # 원본 이미지 저장 (JPG)
         img_path = f"{image_folder}/{num}.jpg"
         img_response = requests.get(image_url, stream=True)
         with open(img_path, 'wb') as img_file:
             img_file.write(img_response.content)
         
-        # 이미지 크기 조절
+        # 이미지 크기 조절 및 PNG로 저장
         img = PILImage.open(img_path)
         img_resized = img.resize((int(img.width * 0.3), int(img.height * 0.3)))  # 크기 조절
-        img_resized_path = f"{image_folder}/{num}_resized.jpg"
-        img_resized.save(img_resized_path)
+        img_resized_path = f"{image_folder}/{num}_resized.png"
+        img_resized.save(img_resized_path, format='PNG')
         img.close()
     except:
         image_url = "No Image"
+        img_path = None
         img_resized_path = None
     
     # 블로그 내용 추출
@@ -71,8 +74,16 @@ for blog_url in blog_url_list:
     
     # 엑셀에 제목과 이미지 추가
     sheet.cell(row=num + 1, column=1).value = title
-    if img_resized_path:
+    
+    # 이미지 추가: 리사이즈된 이미지가 있으면 사용, 없으면 원본 이미지 사용
+    if img_resized_path and os.path.exists(img_resized_path):
         excel_img = Image(img_resized_path)
+    elif img_path and os.path.exists(img_path):
+        excel_img = Image(img_path)
+    else:
+        excel_img = None
+    
+    if excel_img:
         excel_img.width = 150  # 엑셀에서의 이미지 너비 (포인트)
         excel_img.height = 200  # 엑셀에서의 이미지 높이 (포인트)
         sheet.add_image(excel_img, f"B{num + 1}")
@@ -98,9 +109,18 @@ sheet.column_dimensions["B"].width = 50
 # 행 높이 조절
 for row in sheet.iter_rows(min_row=2, max_row=num):
     sheet.row_dimensions[row[0].row].height = 200  # 충분히 큰 행 높이 설정
-    
+
 # 엑셀 파일 저장
 book.save("blog_data.xlsx")
 
 # 브라우저 닫기
 browser.quit()
+
+# 이미지 저장 폴더 및 파일 삭제
+for root, dirs, files in os.walk(image_folder, topdown=False):
+    for name in files:
+        os.remove(os.path.join(root, name))
+    for name in dirs:
+        os.rmdir(os.path.join(root, name))
+os.rmdir(image_folder)
+
