@@ -14,7 +14,7 @@ sheet.title = "Blog Data"
 sheet.append(["Title", "Image"])
 
 # 웹드라이버 설정
-keyword = "AI"
+keyword = "기후위기"          # 검색어
 opt = webdriver.ChromeOptions()
 opt.add_experimental_option("detach", True)
 browser = webdriver.Chrome(options=opt)
