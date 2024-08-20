@@ -95,6 +95,10 @@ for blog_url in blog_url_list:
 sheet.column_dimensions["A"].width = 35
 sheet.column_dimensions["B"].width = 50
 
+# 행 높이 조절
+for row in sheet.iter_rows(min_row=2, max_row=num):
+    sheet.row_dimensions[row[0].row].height = 200  # 충분히 큰 행 높이 설정
+    
 # 엑셀 파일 저장
 book.save("blog_data.xlsx")
 
