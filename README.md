@@ -4,7 +4,7 @@
 #### 키워드        : 기후위기
 
 #### 웹크롤링     : web_crawling.py
-#### 워드클라우드 : word_cloud_1.ipynb
+#### 워드클라우드 : word_cloud_2.ipynb
 
 #### selenium을 이용한 크롤링
 #### konlpy와 Okt를 이용한 워드 클라우드
